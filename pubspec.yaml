@@ -5,7 +5,7 @@ author: Appia Systems Limited
 homepage: http://appia.co
 documentation: https://appiapay.github.io/manta-python
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.12.0 <4.0.0"
 
 dependencies:
   mqtt_client: ^9.0.0
