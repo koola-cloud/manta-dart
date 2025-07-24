@@ -1,19 +1,18 @@
 import 'dart:convert' show jsonDecode, jsonEncode;
 
 import 'package:decimal/decimal.dart' show Decimal;
-import 'package:json_annotation/json_annotation.dart' show JsonSerializable, JsonKey;
-import "package:pointycastle/export.dart" show RSAPrivateKey, RSAPublicKey;
+import 'package:json_annotation/json_annotation.dart';
+import 'package:pointycastle/export.dart' show RSAPrivateKey, RSAPublicKey;
 
-import "crypto.dart" show RsaKeyHelper;
+import 'crypto.dart' show RsaKeyHelper;
 
 part 'messages.g.dart';
 
 const MANTA_VERSION = '1.6';
 const HASHCODE_K = 37 * 17;
 
-Decimal str_to_decimal(String value) => Decimal.parse(value);
-
-String decimal_to_str(Decimal value) => value.toString();
+Decimal strToDecimal(String value) => Decimal.parse(value);
+String decimalToStr(Decimal value) => value.toString();
 
 abstract class BaseMessage {
   bool _equalData(BaseMessage other) {
@@ -21,160 +20,126 @@ abstract class BaseMessage {
   }
 
   @override
-  int get hashCode {
-    // don't ask me why, see https://dart.dev/guides/libraries/library-tour#implementing-map-keys
-    return HASHCODE_K + jsonEncode(this).hashCode;
-  }
+  int get hashCode => HASHCODE_K + jsonEncode(this).hashCode;
 }
 
 @JsonSerializable()
 class MerchantOrderRequestMessage extends BaseMessage {
-  @JsonKey(fromJson: str_to_decimal, toJson: decimal_to_str)
-  Decimal amount;
-  String session_id;
-  String fiat_currency;
-  String crypto_currency;
+  @JsonKey(fromJson: strToDecimal, toJson: decimalToStr)
+  final Decimal amount;
+  final String session_id;
+  final String fiat_currency;
+  final String crypto_currency;
 
-  MerchantOrderRequestMessage({
-      this.amount,
-      this.session_id,
-      this.fiat_currency,
-      this.crypto_currency
+  const MerchantOrderRequestMessage({
+    required this.amount,
+    required this.session_id,
+    required this.fiat_currency,
+    required this.crypto_currency,
   });
 
   factory MerchantOrderRequestMessage.fromJson(Map<String, dynamic> json) =>
-    _$MerchantOrderRequestMessageFromJson(json);
-
-  @override
-  bool operator ==(dynamic other) {
-    // cannot use reflection, gets in the way of flutter's tree shaking
-    if (other is! MerchantOrderRequestMessage) {
-      return false;
-    }
-    return _equalData(other);
-  }
+      _$MerchantOrderRequestMessageFromJson(json);
 
   Map<String, dynamic> toJson() => _$MerchantOrderRequestMessageToJson(this);
+
+  @override
+  bool operator ==(Object other) =>
+      other is MerchantOrderRequestMessage && _equalData(other);
 }
 
 @JsonSerializable()
 class AckMessage extends BaseMessage {
-  String txid;
-  String status;
-  String url;
+  final String txid;
+  final String status;
+  final String url;
 
-  @JsonKey(fromJson: str_to_decimal, toJson: decimal_to_str)
-  Decimal amount;
-  String transaction_hash;
-  String transaction_currency;
-  String memo;
+  @JsonKey(fromJson: strToDecimal, toJson: decimalToStr)
+  final Decimal amount;
 
-  AckMessage({
-      this.txid,
-      this.status,
-      this.url,
-      this.amount,
-      this.transaction_hash,
-      this.transaction_currency,
-      this.memo
+  final String transaction_hash;
+  final String transaction_currency;
+  final String memo;
+
+  const AckMessage({
+    required this.txid,
+    required this.status,
+    required this.url,
+    required this.amount,
+    required this.transaction_hash,
+    required this.transaction_currency,
+    required this.memo,
   });
 
   factory AckMessage.fromJson(Map<String, dynamic> json) =>
-    _$AckMessageFromJson(json);
-
-  @override
-  bool operator ==(dynamic other) {
-    // cannot use reflection, gets in the way of flutter's tree shaking
-    if (other is! AckMessage) {
-      return false;
-    }
-    return _equalData(other);
-  }
+      _$AckMessageFromJson(json);
 
   Map<String, dynamic> toJson() => _$AckMessageToJson(this);
+
+  @override
+  bool operator ==(Object other) => other is AckMessage && _equalData(other);
 }
 
 @JsonSerializable()
 class Destination extends BaseMessage {
-  @JsonKey(fromJson: str_to_decimal, toJson: decimal_to_str)
-  Decimal amount;
+  @JsonKey(fromJson: strToDecimal, toJson: decimalToStr)
+  final Decimal amount;
 
-  String destination_address;
-  String crypto_currency;
+  final String destination_address;
+  final String crypto_currency;
 
-  Destination({
-    this.amount,
-    this.destination_address,
-    this.crypto_currency,
+  const Destination({
+    required this.amount,
+    required this.destination_address,
+    required this.crypto_currency,
   });
 
   factory Destination.fromJson(Map<String, dynamic> json) =>
-    _$DestinationFromJson(json);
-
-  @override
-  bool operator ==(dynamic other) {
-    // cannot use reflection, gets in the way of flutter's tree shaking
-    if (other is! Destination) {
-      return false;
-    }
-    return _equalData(other);
-  }
+      _$DestinationFromJson(json);
 
   Map<String, dynamic> toJson() => _$DestinationToJson(this);
+
+  @override
+  bool operator ==(Object other) => other is Destination && _equalData(other);
 }
 
 @JsonSerializable()
 class Merchant extends BaseMessage {
-  String name;
-  String address;
+  final String name;
+  final String address;
 
-  Merchant({this.name, this.address});
+  const Merchant({required this.name, required this.address});
 
   factory Merchant.fromJson(Map<String, dynamic> json) =>
-    _$MerchantFromJson(json);
-
-  @override
-  bool operator ==(dynamic other) {
-    // cannot use reflection, gets in the way of flutter's tree shaking
-    if (other is! Merchant) {
-      return false;
-    }
-    return _equalData(other);
-  }
+      _$MerchantFromJson(json);
 
   Map<String, dynamic> toJson() => _$MerchantToJson(this);
+
+  @override
+  bool operator ==(Object other) => other is Merchant && _equalData(other);
 }
 
 @JsonSerializable()
 class PaymentRequestMessage extends BaseMessage {
-  Merchant merchant;
+  final Merchant merchant;
 
-  @JsonKey(fromJson: str_to_decimal, toJson: decimal_to_str)
-  Decimal amount;
+  @JsonKey(fromJson: strToDecimal, toJson: decimalToStr)
+  final Decimal amount;
 
-  String fiat_currency;
-  List<Destination> destinations;
-  Set<String> supported_cryptos;
+  final String fiat_currency;
+  final List<Destination> destinations;
+  final Set<String> supported_cryptos;
 
-  factory PaymentRequestMessage.fromJson(Map<String, dynamic> json) =>
-    _$PaymentRequestMessageFromJson(json);
-
-  PaymentRequestMessage({
-      this.merchant,
-      this.amount,
-      this.fiat_currency,
-      this.destinations,
-      this.supported_cryptos
+  const PaymentRequestMessage({
+    required this.merchant,
+    required this.amount,
+    required this.fiat_currency,
+    required this.destinations,
+    required this.supported_cryptos,
   });
 
-  @override
-  bool operator ==(dynamic other) {
-    // cannot use reflection, gets in the way of flutter's tree shaking
-    if (other is! PaymentRequestMessage) {
-      return false;
-    }
-    return _equalData(other);
-  }
+  factory PaymentRequestMessage.fromJson(Map<String, dynamic> json) =>
+      _$PaymentRequestMessageFromJson(json);
 
   Map<String, dynamic> toJson() => _$PaymentRequestMessageToJson(this);
 
@@ -183,30 +148,31 @@ class PaymentRequestMessage extends BaseMessage {
     final helper = RsaKeyHelper();
     final signature = helper.sign(jsonMessage, key);
 
-    return PaymentRequestEnvelope(message: jsonMessage, signature: signature,);
+    return PaymentRequestEnvelope(
+      message: jsonMessage,
+      signature: signature,
+    );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaymentRequestMessage && _equalData(other);
 }
 
 @JsonSerializable()
 class PaymentRequestEnvelope extends BaseMessage {
-  String message;
-  String signature;
-  String version = MANTA_VERSION;
+  final String message;
+  final String signature;
+  final String version;
 
-  PaymentRequestEnvelope(
-      {this.message, this.signature, this.version = MANTA_VERSION});
+  const PaymentRequestEnvelope({
+    required this.message,
+    required this.signature,
+    this.version = MANTA_VERSION,
+  });
 
   factory PaymentRequestEnvelope.fromJson(Map<String, dynamic> json) =>
-    _$PaymentRequestEnvelopeFromJson(json);
-
-  @override
-  bool operator ==(dynamic other) {
-    // cannot use reflection, gets in the way of flutter's tree shaking
-    if (other is! PaymentRequestEnvelope) {
-      return false;
-    }
-    return _equalData(other);
-  }
+      _$PaymentRequestEnvelopeFromJson(json);
 
   Map<String, dynamic> toJson() => _$PaymentRequestEnvelopeToJson(this);
 
@@ -216,33 +182,32 @@ class PaymentRequestEnvelope extends BaseMessage {
   }
 
   PaymentRequestMessage unpack() {
-    return PaymentRequestMessage.fromJson(jsonDecode(this.message));
+    return PaymentRequestMessage.fromJson(jsonDecode(message));
   }
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaymentRequestEnvelope && _equalData(other);
 }
 
 @JsonSerializable()
 class PaymentMessage extends BaseMessage {
-  String crypto_currency;
-  String transaction_hash;
-  String version;
+  final String crypto_currency;
+  final String transaction_hash;
+  final String version;
 
-  PaymentMessage({
-      this.crypto_currency,
-      this.transaction_hash,
-      this.version = MANTA_VERSION
+  const PaymentMessage({
+    required this.crypto_currency,
+    required this.transaction_hash,
+    this.version = MANTA_VERSION,
   });
 
   factory PaymentMessage.fromJson(Map<String, dynamic> json) =>
-    _$PaymentMessageFromJson(json);
-
-  @override
-  bool operator ==(dynamic other) {
-    // cannot use reflection, gets in the way of flutter's tree shaking
-    if (other is! PaymentMessage) {
-      return false;
-    }
-    return _equalData(other);
-  }
+      _$PaymentMessageFromJson(json);
 
   Map<String, dynamic> toJson() => _$PaymentMessageToJson(this);
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaymentMessage && _equalData(other);
 }
